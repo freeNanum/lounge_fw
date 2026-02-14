@@ -12,6 +12,17 @@ interface RedirectState {
 
 type AuthMode = "login" | "signup";
 
+function toAuthErrorMessage(error: unknown, mode: AuthMode): string {
+  const fallback = mode === "login" ? "Failed to sign in." : "Failed to create account.";
+  const message = error instanceof Error ? error.message : fallback;
+
+  if (message.toLowerCase().includes("invalid api key")) {
+    return "Supabase API key is invalid. Check Vercel env vars: VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) and redeploy.";
+  }
+
+  return message;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,11 +60,7 @@ export function LoginPage() {
         setStatus("Account created. If email confirmation is enabled, please verify your inbox.");
       }
     } catch (error) {
-      if (mode === "login") {
-        setStatus(error instanceof Error ? error.message : "Failed to sign in.");
-      } else {
-        setStatus(error instanceof Error ? error.message : "Failed to create account.");
-      }
+      setStatus(toAuthErrorMessage(error, mode));
       setIsSubmitting(false);
       return;
     }
@@ -68,7 +75,7 @@ export function LoginPage() {
     try {
       await authRepository.signInWithGithub(`${window.location.origin}${ROUTE_PATHS.authCallback}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to continue with GitHub.");
+      setStatus(toAuthErrorMessage(error, "login"));
       setIsSubmitting(false);
     }
   };
