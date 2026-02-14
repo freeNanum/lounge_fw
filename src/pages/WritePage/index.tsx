@@ -73,7 +73,7 @@ export function WritePage() {
       <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px", maxWidth: "960px" }}>
         <label>
           Type
-          <select {...register("type", { required: true })}>
+          <select {...register("type", { required: true })} style={{ marginLeft: "12px" }}>
             <option value="question">Question</option>
             <option value="info">Info</option>
           </select>
