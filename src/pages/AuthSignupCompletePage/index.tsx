@@ -6,13 +6,13 @@ export function AuthSignupCompletePage() {
 
   return (
     <div style={{ display: "grid", gap: "12px" }}>
-      <h1 style={{ margin: 0 }}>가입 완료</h1>
-      <p style={{ margin: 0, color: "#334155" }}>가입이 정상적으로 완료되었습니다.</p>
+      <h1 style={{ margin: 0 }}>Signup Complete</h1>
+      <p style={{ margin: 0, color: "#334155" }}>Your account has been created successfully.</p>
       <button type="button" onClick={() => navigate(ROUTE_PATHS.home, { replace: true })}>
-        홈으로 이동
+        Go to Home
       </button>
       <button type="button" onClick={() => navigate(ROUTE_PATHS.authLogin, { replace: true })}>
-        로그인 페이지로 이동
+        Go to Login
       </button>
     </div>
   );
