@@ -19,7 +19,11 @@ export interface ListPostsQuery extends CursorRequest {
 export interface PostsRepository {
   listFeed(query: ListPostsQuery, context?: RequestContext): Promise<CursorPage<PostSummary>>;
   listByTag(tagName: string, query: CursorRequest, context?: RequestContext): Promise<CursorPage<PostSummary>>;
-  search(queryText: string, query: CursorRequest, context?: RequestContext): Promise<CursorPage<PostSummary>>;
+  search(
+    queryText: string,
+    query: CursorRequest & { tags?: string[] },
+    context?: RequestContext
+  ): Promise<CursorPage<PostSummary>>;
   getById(postId: string, context?: RequestContext): Promise<PostDetail | null>;
   create(authorId: string, input: CreatePostInput): Promise<PostDetail>;
   update(postId: string, authorId: string, input: UpdatePostInput): Promise<PostDetail>;

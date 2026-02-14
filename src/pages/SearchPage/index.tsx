@@ -1,11 +1,18 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSearchPosts } from "../../features/search/useSearchPosts";
+import { usePopularTags } from "../../features/tag-filter/useTags";
+
+function normalizeTagName(raw: string): string {
+  return raw.trim().toLowerCase();
+}
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("q") ?? "";
+  const selectedTags = [...new Set(searchParams.getAll("tag").map(normalizeTagName).filter(Boolean))];
   const [queryText, setQueryText] = useState(initial);
+  const tagsQuery = usePopularTags(12);
 
   useEffect(() => {
     setQueryText(initial);
@@ -13,6 +20,7 @@ export function SearchPage() {
 
   const searchQuery = useSearchPosts({
     queryText: initial,
+    tags: selectedTags,
     limit: 20,
   });
 
@@ -27,6 +35,30 @@ export function SearchPage() {
     setSearchParams(next);
   };
 
+  const setTagParams = (nextTags: string[]) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tag");
+    nextTags.forEach((tagName) => next.append("tag", tagName));
+    setSearchParams(next);
+  };
+
+  const toggleTag = (tagName: string) => {
+    const normalized = normalizeTagName(tagName);
+    if (!normalized) {
+      return;
+    }
+
+    const hasTag = selectedTags.includes(normalized);
+    if (hasTag) {
+      setTagParams(selectedTags.filter((value) => value !== normalized));
+      return;
+    }
+
+    setTagParams([...selectedTags, normalized]);
+  };
+
+  const hasAppliedFilters = initial.trim().length > 0 || selectedTags.length > 0;
+
   return (
     <div style={{ display: "grid", gap: "16px" }}>
       <h1 style={{ margin: 0 }}>Search</h1>
@@ -39,6 +71,57 @@ export function SearchPage() {
         />
         <button type="submit">Search</button>
       </form>
+
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <button type="button" onClick={() => setTagParams([])} disabled={selectedTags.length === 0}>
+          All Tags
+        </button>
+        {tagsQuery.data?.map((tag) => (
+          <button
+            key={tag.id}
+            type="button"
+            onClick={() => toggleTag(tag.name)}
+            style={{
+              borderColor: selectedTags.includes(tag.name) ? "#14b8a6" : undefined,
+              background: selectedTags.includes(tag.name) ? "#f0fdfa" : undefined,
+              color: selectedTags.includes(tag.name) ? "#0f766e" : undefined,
+            }}
+          >
+            #{tag.name} ({tag.postCount})
+          </button>
+        ))}
+      </div>
+
+      {hasAppliedFilters ? (
+        <section
+          style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+            alignItems: "center",
+            border: "1px solid #e2e8f0",
+            background: "#fff",
+            padding: "8px 10px",
+          }}
+        >
+          <strong style={{ fontSize: "13px", color: "#334155" }}>Applied Filters</strong>
+          {initial.trim() ? (
+            <span style={{ border: "1px solid #cbd5e1", padding: "0 8px", borderRadius: "9999px", fontSize: "13px" }}>
+              q: {initial.trim()}
+            </span>
+          ) : null}
+          {selectedTags.length > 0 ? (
+            <span style={{ border: "1px solid #14b8a6", background: "#f0fdfa", color: "#0f766e", padding: "0 8px", borderRadius: "9999px", fontSize: "13px" }}>
+              tag match: ALL
+            </span>
+          ) : null}
+          {selectedTags.map((tagName) => (
+            <span key={tagName} style={{ border: "1px solid #14b8a6", color: "#0f766e", padding: "0 8px", borderRadius: "9999px", fontSize: "13px" }}>
+              #{tagName}
+            </span>
+          ))}
+        </section>
+      ) : null}
 
       {searchQuery.isLoading ? <div>Searching...</div> : null}
       {searchQuery.isError ? <div>Search failed.</div> : null}

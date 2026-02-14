@@ -41,13 +41,13 @@ class SupabasePostsRepository implements PostsRepository {
     const limit = normalizeLimit(query.limit || DEFAULT_LIMIT);
     const normalizedTagNames = normalizeTagNames(query.tags ?? (query.tag ? [query.tag] : []));
 
-    if (query.q && query.q.trim().length > 0 && normalizedTagNames.length === 0) {
+    if (query.q && query.q.trim().length > 0) {
       const rpcRows = await this.searchRowsByRpc({
         query: query.q,
         limit: limit + 1,
         cursor: query.cursor ?? null,
         type: query.type ?? null,
-        tag: query.tag ?? null,
+        tags: normalizedTagNames,
       });
       const sliced = rpcRows.slice(0, limit);
 
@@ -111,16 +111,17 @@ class SupabasePostsRepository implements PostsRepository {
 
   async search(
     queryText: string,
-    query: { limit: number; cursor?: string | null },
+    query: { limit: number; cursor?: string | null; tags?: string[] },
     context?: { viewerId?: string | null }
   ): Promise<CursorPage<PostSummary>> {
     const limit = normalizeLimit(query.limit || DEFAULT_LIMIT);
+    const normalizedTagNames = normalizeTagNames(query.tags ?? []);
     const rpcRows = await this.searchRowsByRpc({
       query: queryText,
       limit: limit + 1,
       cursor: query.cursor ?? null,
       type: null,
-      tag: null,
+      tags: normalizedTagNames,
     });
     const sliced = rpcRows.slice(0, limit);
 
@@ -258,14 +259,14 @@ class SupabasePostsRepository implements PostsRepository {
     limit: number;
     cursor: string | null;
     type: "question" | "info" | null;
-    tag: string | null;
+    tags: string[];
   }): Promise<PostRow[]> {
     const { data, error } = await supabase.rpc("search_posts", {
       p_query: params.query,
       p_limit: params.limit,
       p_cursor: params.cursor,
       p_type: params.type,
-      p_tag: params.tag,
+      p_tags: params.tags,
     });
 
     throwIfError(error);

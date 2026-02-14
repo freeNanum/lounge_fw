@@ -4,11 +4,12 @@ import { useAuth } from "../auth/AuthProvider";
 
 interface UseSearchPostsParams {
   queryText: string;
+  tags?: string[];
   limit?: number;
   cursor?: string | null;
 }
 
-export function useSearchPosts({ queryText, limit = 20, cursor = null }: UseSearchPostsParams) {
+export function useSearchPosts({ queryText, tags, limit = 20, cursor = null }: UseSearchPostsParams) {
   const { user } = useAuth();
 
   return useQuery({
@@ -17,6 +18,7 @@ export function useSearchPosts({ queryText, limit = 20, cursor = null }: UseSear
       postsRepository.search(
         queryText,
         {
+          tags,
           limit,
           cursor,
         },
