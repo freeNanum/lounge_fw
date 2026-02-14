@@ -6,6 +6,41 @@ import { usePostDetail } from "../../features/post-detail/usePostDetail";
 import { PostTagSelector } from "../../features/post-editor/components/PostTagSelector";
 import { useDeletePost, useUpdatePost } from "../../features/post-editor/usePostMutations";
 
+const QUESTION_PLACEHOLDER = `# Problem
+What issue are you facing?
+
+## Environment
+- Board/Device:
+- Firmware/OS version:
+- Toolchain:
+
+## What I tried
+1. Step 1
+2. Step 2
+
+## Expected result
+Describe what should happen.
+
+## Actual result
+Describe what actually happened.`;
+
+const INFO_PLACEHOLDER = `# Summary
+Share useful information for others.
+
+## Context
+Why this tip/update matters.
+
+## Key points
+- Point 1
+- Point 2
+
+## How to apply
+1. Step 1
+2. Step 2
+
+## References
+- Link or document`;
+
 export function PostEditPage() {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -19,6 +54,7 @@ export function PostEditPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tagNames, setTagNames] = useState<string[]>([]);
+  const bodyPlaceholder = type === "info" ? INFO_PLACEHOLDER : QUESTION_PLACEHOLDER;
 
   useEffect(() => {
     if (!postQuery.data) {
@@ -99,6 +135,7 @@ export function PostEditPage() {
             rows={18}
             minLength={10}
             style={{ width: "100%", minHeight: "420px", resize: "vertical" }}
+            placeholder={bodyPlaceholder}
             required
           />
         </label>

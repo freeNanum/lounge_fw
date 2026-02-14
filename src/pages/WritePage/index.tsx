@@ -13,6 +13,41 @@ interface CreatePostFormValues {
   tagNames: string[];
 }
 
+const QUESTION_PLACEHOLDER = `# Problem
+What issue are you facing?
+
+## Environment
+- Board/Device:
+- Firmware/OS version:
+- Toolchain:
+
+## What I tried
+1. Step 1
+2. Step 2
+
+## Expected result
+Describe what should happen.
+
+## Actual result
+Describe what actually happened.`;
+
+const INFO_PLACEHOLDER = `# Summary
+Share useful information for others.
+
+## Context
+Why this tip/update matters.
+
+## Key points
+- Point 1
+- Point 2
+
+## How to apply
+1. Step 1
+2. Step 2
+
+## References
+- Link or document`;
+
 export function WritePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,6 +72,8 @@ export function WritePage() {
 
   const selectedTagNames = watch("tagNames") ?? [];
   const markdownBody = watch("body");
+  const selectedType = watch("type");
+  const bodyPlaceholder = selectedType === "info" ? INFO_PLACEHOLDER : QUESTION_PLACEHOLDER;
 
   const setSelectedTagNames = (nextTags: string[]) => {
     setValue("tagNames", nextTags, { shouldDirty: true, shouldTouch: true });
@@ -116,7 +153,7 @@ export function WritePage() {
             rows={18}
             minLength={10}
             style={{ width: "100%", minHeight: "420px", resize: "vertical" }}
-            placeholder={"# Problem\nDescribe your issue with details...\n\n## What I tried\n- step 1\n- step 2"}
+            placeholder={bodyPlaceholder}
           />
         </label>
         <FormErrorText>{errors.body?.message}</FormErrorText>
