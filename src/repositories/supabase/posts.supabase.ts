@@ -32,11 +32,16 @@ function toExcerpt(body: string): string {
   return `${body.slice(0, 180)}...`;
 }
 
+function normalizeTagNames(tagNames: string[]): string[] {
+  return [...new Set(tagNames.map((name) => name.trim().toLowerCase()).filter(Boolean))];
+}
+
 class SupabasePostsRepository implements PostsRepository {
   async listFeed(query: ListPostsQuery, context?: { viewerId?: string | null }): Promise<CursorPage<PostSummary>> {
     const limit = normalizeLimit(query.limit || DEFAULT_LIMIT);
+    const normalizedTagNames = normalizeTagNames(query.tags ?? (query.tag ? [query.tag] : []));
 
-    if (query.q && query.q.trim().length > 0) {
+    if (query.q && query.q.trim().length > 0 && normalizedTagNames.length === 0) {
       const rpcRows = await this.searchRowsByRpc({
         query: query.q,
         limit: limit + 1,
@@ -72,26 +77,8 @@ class SupabasePostsRepository implements PostsRepository {
       builder = builder.order("created_at", { ascending: false });
     }
 
-    if (query.tag) {
-      const { data: tagRow, error: tagError } = await supabase
-        .from("tags")
-        .select("id")
-        .eq("name", query.tag.toLowerCase())
-        .maybeSingle();
-
-      throwIfError(tagError);
-
-      if (!tagRow) {
-        return { items: [], nextCursor: null };
-      }
-
-      const { data: postTagRows, error: postTagError } = await supabase
-        .from("post_tags")
-        .select("post_id")
-        .eq("tag_id", (tagRow as { id: string }).id);
-      throwIfError(postTagError);
-
-      const postIds = [...new Set(((postTagRows ?? []) as Array<{ post_id: string }>).map((row) => row.post_id))];
+    if (normalizedTagNames.length > 0) {
+      const postIds = await this.loadPostIdsByAllTagNames(normalizedTagNames);
       if (postIds.length === 0) {
         return { items: [], nextCursor: null };
       }
@@ -116,7 +103,7 @@ class SupabasePostsRepository implements PostsRepository {
     return this.listFeed(
       {
         ...query,
-        tag: tagName,
+        tags: [tagName],
       },
       context
     );
@@ -240,6 +227,30 @@ class SupabasePostsRepository implements PostsRepository {
   async remove(postId: string, authorId: string): Promise<void> {
     const { error } = await supabase.from("posts").delete().eq("id", postId).eq("author_id", authorId);
     throwIfError(error);
+  }
+
+  private async loadPostIdsByAllTagNames(tagNames: string[]): Promise<string[]> {
+    const normalizedTagNames = normalizeTagNames(tagNames);
+    if (normalizedTagNames.length === 0) {
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from("post_tags")
+      .select("post_id,tags!inner(name)")
+      .in("tags.name", normalizedTagNames);
+
+    throwIfError(error);
+
+    const matchCountByPostId = new Map<string, number>();
+    ((data ?? []) as Array<{ post_id: string }>).forEach((row) => {
+      const current = matchCountByPostId.get(row.post_id) ?? 0;
+      matchCountByPostId.set(row.post_id, current + 1);
+    });
+
+    return [...matchCountByPostId.entries()]
+      .filter(([, matchCount]) => matchCount === normalizedTagNames.length)
+      .map(([postId]) => postId);
   }
 
   private async searchRowsByRpc(params: {

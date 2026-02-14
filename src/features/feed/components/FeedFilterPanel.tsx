@@ -4,11 +4,12 @@ import type { TagSummary } from "../../../entities/tag/types";
 interface FeedFilterPanelProps {
   selectedType?: PostType;
   selectedSort: PostSort;
-  selectedTag?: string;
+  selectedTags: string[];
   tags: TagSummary[];
   onSelectType: (value?: PostType) => void;
   onSelectSort: (value: PostSort) => void;
-  onSelectTag: (value?: string) => void;
+  onToggleTag: (value: string) => void;
+  onClearTags: () => void;
 }
 
 const POST_TYPES: Array<{ label: string; value: PostType }> = [
@@ -24,11 +25,12 @@ const SORTS: Array<{ label: string; value: PostSort }> = [
 export function FeedFilterPanel({
   selectedType,
   selectedSort,
-  selectedTag,
+  selectedTags,
   tags,
   onSelectType,
   onSelectSort,
-  onSelectTag,
+  onToggleTag,
+  onClearTags,
 }: FeedFilterPanelProps) {
   return (
     <section style={{ display: "grid", gap: "12px", background: "#fff", border: "1px solid #e2e8f0", padding: "12px" }}>
@@ -52,11 +54,36 @@ export function FeedFilterPanel({
       </div>
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        <button type="button" onClick={() => onSelectTag(undefined)} disabled={!selectedTag}>
+        {selectedTags.length > 0 ? (
+          <span
+            style={{
+              border: "1px solid #14b8a6",
+              background: "#f0fdfa",
+              color: "#0f766e",
+              padding: "0 8px",
+              borderRadius: "9999px",
+              fontSize: "13px",
+              display: "inline-flex",
+              alignItems: "center",
+            }}
+          >
+            Tag Match: ALL ({selectedTags.length})
+          </span>
+        ) : null}
+        <button type="button" onClick={onClearTags} disabled={selectedTags.length === 0}>
           All Tags
         </button>
         {tags.map((tag) => (
-          <button key={tag.id} type="button" onClick={() => onSelectTag(tag.name)} disabled={selectedTag === tag.name}>
+          <button
+            key={tag.id}
+            type="button"
+            onClick={() => onToggleTag(tag.name)}
+            style={{
+              borderColor: selectedTags.includes(tag.name) ? "#14b8a6" : undefined,
+              background: selectedTags.includes(tag.name) ? "#f0fdfa" : undefined,
+              color: selectedTags.includes(tag.name) ? "#0f766e" : undefined,
+            }}
+          >
             #{tag.name} ({tag.postCount})
           </button>
         ))}

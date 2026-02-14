@@ -3,10 +3,10 @@ import type { PostSummary } from "../../../entities/post/types";
 
 interface PostFeedListProps {
   posts: PostSummary[];
-  onSelectTag: (tagName: string) => void;
+  onToggleTag: (tagName: string) => void;
 }
 
-export function PostFeedList({ posts, onSelectTag }: PostFeedListProps) {
+export function PostFeedList({ posts, onToggleTag }: PostFeedListProps) {
   return (
     <section style={{ display: "grid", gap: "10px" }}>
       {posts.map((post) => (
@@ -38,7 +38,7 @@ export function PostFeedList({ posts, onSelectTag }: PostFeedListProps) {
             ) : null}
             <span>comments {post.commentCount}</span>
             {post.tags.map((tag) => (
-              <button key={tag.id} type="button" onClick={() => onSelectTag(tag.name)}>
+              <button key={tag.id} type="button" onClick={() => onToggleTag(tag.name)}>
                 #{tag.name}
               </button>
             ))}

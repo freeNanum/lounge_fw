@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthProvider";
 
 interface UseFeedPostsParams {
   type?: PostType;
+  tags?: string[];
   tag?: string;
   q?: string;
   sort?: PostSort;
@@ -21,6 +22,7 @@ export function useFeedPosts(params: UseFeedPostsParams) {
       postsRepository.listFeed(
         {
           type: params.type,
+          tags: params.tags,
           tag: params.tag,
           q: params.q,
           sort: params.sort,

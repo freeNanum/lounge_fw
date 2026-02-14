@@ -17,6 +17,7 @@ export type RoutePathKey = keyof typeof ROUTE_PATHS;
 
 export interface FeedQueryParams {
   type?: PostType;
+  tags?: string[];
   tag?: string;
   q?: string;
   sort?: PostSort;

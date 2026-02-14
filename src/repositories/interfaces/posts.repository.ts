@@ -10,6 +10,7 @@ import type { CursorPage, CursorRequest, RequestContext } from "./common";
 
 export interface ListPostsQuery extends CursorRequest {
   type?: PostType;
+  tags?: string[];
   tag?: string;
   q?: string;
   sort?: PostSort;
