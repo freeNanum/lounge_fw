@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { PostType } from "../../entities/post/types";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { usePostDetail } from "../../features/post-detail/usePostDetail";
+import { PostTagSelector } from "../../features/post-editor/components/PostTagSelector";
 import { useDeletePost, useUpdatePost } from "../../features/post-editor/usePostMutations";
 
 export function PostEditPage() {
@@ -17,7 +18,7 @@ export function PostEditPage() {
   const [type, setType] = useState<PostType>("question");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
+  const [tagNames, setTagNames] = useState<string[]>([]);
 
   useEffect(() => {
     if (!postQuery.data) {
@@ -27,7 +28,7 @@ export function PostEditPage() {
     setType(postQuery.data.type);
     setTitle(postQuery.data.title);
     setBody(postQuery.data.body);
-    setTagsInput(postQuery.data.tags.map((tag) => tag.name).join(", "));
+    setTagNames(postQuery.data.tags.map((tag) => tag.name));
   }, [postQuery.data]);
 
   if (!postId) {
@@ -47,11 +48,6 @@ export function PostEditPage() {
     if (!user?.id) {
       return;
     }
-
-    const tagNames = tagsInput
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
 
     const updated = await updatePost.mutateAsync({
       postId,
@@ -99,10 +95,7 @@ export function PostEditPage() {
           Body
           <textarea value={body} onChange={(event) => setBody(event.target.value)} rows={10} minLength={10} required />
         </label>
-        <label>
-          Tags (comma separated)
-          <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} />
-        </label>
+        <PostTagSelector selectedTagNames={tagNames} onChange={setTagNames} disabled={updatePost.isPending || deletePost.isPending} />
         <div style={{ display: "flex", gap: "8px" }}>
           <button type="submit" disabled={updatePost.isPending || !title.trim() || !body.trim()}>
             {updatePost.isPending ? "Saving..." : "Save"}

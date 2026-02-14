@@ -1,68 +1,140 @@
-import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import type { PostType } from "../../entities/post/types";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { PostTagSelector } from "../../features/post-editor/components/PostTagSelector";
 import { useCreatePost } from "../../features/post-editor/usePostMutations";
+import { FormErrorText } from "../../shared/ui/FormErrorText";
+
+interface CreatePostFormValues {
+  type: PostType;
+  title: string;
+  body: string;
+  tagNames: string[];
+}
 
 export function WritePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const createPost = useCreatePost();
 
-  const [type, setType] = useState<PostType>("question");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<CreatePostFormValues>({
+    defaultValues: {
+      type: "question",
+      title: "",
+      body: "",
+      tagNames: [],
+    },
+  });
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const selectedTagNames = watch("tagNames") ?? [];
+  const markdownBody = watch("body");
+
+  const setSelectedTagNames = (nextTags: string[]) => {
+    setValue("tagNames", nextTags, { shouldDirty: true, shouldTouch: true });
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
+    clearErrors("root");
     if (!user?.id) {
+      setError("root", { message: "You must be signed in to create a post." });
       return;
     }
 
-    const tagNames = tagsInput
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
+    try {
+      const created = await createPost.mutateAsync({
+        authorId: user.id,
+        input: {
+          type: values.type,
+          title: values.title.trim(),
+          body: values.body.trim(),
+          tagNames: values.tagNames,
+        },
+      });
 
-    const created = await createPost.mutateAsync({
-      authorId: user.id,
-      input: {
-        type,
-        title,
-        body,
-        tagNames,
-      },
-    });
-
-    navigate(`/posts/${created.id}`);
-  };
+      navigate(`/posts/${created.id}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create post. Please try again.";
+      setError("root", { message });
+    }
+  });
 
   return (
     <div style={{ display: "grid", gap: "16px" }}>
-      <h1 style={{ margin: 0 }}>Write a Post</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "10px", maxWidth: "760px" }}>
+      <h1 style={{ margin: 0 }}>Create Post</h1>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px", maxWidth: "760px" }}>
         <label>
           Type
-          <select value={type} onChange={(event) => setType(event.target.value as PostType)}>
+          <select {...register("type", { required: true })}>
             <option value="question">Question</option>
             <option value="info">Info</option>
           </select>
         </label>
         <label>
           Title
-          <input value={title} onChange={(event) => setTitle(event.target.value)} minLength={3} maxLength={200} required />
+          <input
+            {...register("title", {
+              required: "Title is required.",
+              minLength: {
+                value: 3,
+                message: "Title must be at least 3 characters.",
+              },
+              maxLength: {
+                value: 200,
+                message: "Title must be 200 characters or less.",
+              },
+            })}
+            minLength={3}
+            maxLength={200}
+            placeholder="What are you working on?"
+          />
         </label>
+        <FormErrorText>{errors.title?.message}</FormErrorText>
         <label>
-          Body
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} rows={10} minLength={10} required />
+          Markdown Content
+          <textarea
+            {...register("body", {
+              required: "Content is required.",
+              minLength: {
+                value: 10,
+                message: "Content must be at least 10 characters.",
+              },
+              maxLength: {
+                value: 20000,
+                message: "Content must be 20000 characters or less.",
+              },
+            })}
+            rows={12}
+            minLength={10}
+            placeholder={"# Problem\nDescribe your issue with details...\n\n## What I tried\n- step 1\n- step 2"}
+          />
         </label>
-        <label>
-          Tags (comma separated)
-          <input value={tagsInput} onChange={(event) => setTagsInput(event.target.value)} placeholder="embedded,rtos,pcb" />
-        </label>
-        <button type="submit" disabled={createPost.isPending || !title.trim() || !body.trim()}>
-          {createPost.isPending ? "Publishing..." : "Publish"}
+        <FormErrorText>{errors.body?.message}</FormErrorText>
+
+        <input type="hidden" {...register("tagNames")} />
+        <PostTagSelector
+          selectedTagNames={selectedTagNames}
+          onChange={setSelectedTagNames}
+          disabled={createPost.isPending || isSubmitting}
+        />
+
+        <section style={{ display: "grid", gap: "8px", padding: "12px", border: "1px solid #e2e8f0", background: "#fff" }}>
+          <strong>Markdown Preview</strong>
+          <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{markdownBody || "Nothing to preview yet."}</pre>
+        </section>
+
+        <FormErrorText>{errors.root?.message}</FormErrorText>
+
+        <button type="submit" disabled={createPost.isPending || isSubmitting}>
+          {createPost.isPending || isSubmitting ? "Publishing..." : "Submit"}
         </button>
       </form>
     </div>
