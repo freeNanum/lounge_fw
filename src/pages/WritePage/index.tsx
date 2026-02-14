@@ -94,6 +94,7 @@ export function WritePage() {
             })}
             minLength={3}
             maxLength={200}
+            style={{ width: "100%", boxSizing: "border-box" }}
             placeholder="What are you working on?"
           />
         </label>
