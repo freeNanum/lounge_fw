@@ -12,10 +12,13 @@ class SupabaseAuthRepository implements AuthRepository {
     throwIfError(error);
   }
 
-  async signUpWithPassword(email: string, password: string): Promise<void> {
+  async signUpWithPassword(email: string, password: string, options?: { emailRedirectTo?: string }): Promise<void> {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: options?.emailRedirectTo,
+      },
     });
 
     throwIfError(error);

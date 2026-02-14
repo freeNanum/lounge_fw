@@ -39,6 +39,8 @@ export function LoginPage() {
     return state?.from?.pathname ?? ROUTE_PATHS.home;
   }, [location.state]);
 
+  const authCallbackUrl = `${window.location.origin}${ROUTE_PATHS.authCallback}`;
+
   useEffect(() => {
     if (!user) {
       return;
@@ -56,7 +58,9 @@ export function LoginPage() {
       if (mode === "login") {
         await authRepository.signInWithPassword(email.trim(), password);
       } else {
-        await authRepository.signUpWithPassword(email.trim(), password);
+        await authRepository.signUpWithPassword(email.trim(), password, {
+          emailRedirectTo: authCallbackUrl,
+        });
         setStatus("Account created. If email confirmation is enabled, please verify your inbox.");
       }
     } catch (error) {
@@ -73,7 +77,7 @@ export function LoginPage() {
     setStatus(null);
 
     try {
-      await authRepository.signInWithGithub(`${window.location.origin}${ROUTE_PATHS.authCallback}`);
+      await authRepository.signInWithGithub(authCallbackUrl);
     } catch (error) {
       setStatus(toAuthErrorMessage(error, "login"));
       setIsSubmitting(false);
