@@ -20,6 +20,10 @@ function toAuthErrorMessage(error: unknown, mode: AuthMode): string {
     return "Supabase API key is invalid. Check Vercel env vars: VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) and redeploy.";
   }
 
+  if (message.toLowerCase().includes("email rate limit")) {
+    return "Too many email requests in a short time. Please wait and try again.";
+  }
+
   return message;
 }
 
@@ -33,6 +37,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canResendSignupEmail, setCanResendSignupEmail] = useState(false);
 
   const redirectPath = useMemo(() => {
     const state = location.state as RedirectState | null;
@@ -58,11 +63,17 @@ export function LoginPage() {
     try {
       if (mode === "login") {
         await authRepository.signInWithPassword(email.trim(), password);
+        setCanResendSignupEmail(false);
       } else {
-        await authRepository.signUpWithPassword(email.trim(), password, {
+        const result = await authRepository.signUpWithPassword(email.trim(), password, {
           emailRedirectTo: authSignupCallbackUrl,
         });
-        setStatus("Account created. If email confirmation is enabled, please verify your inbox.");
+        setCanResendSignupEmail(true);
+        if (result.sessionCreated) {
+          setStatus("Account created and signed in. Email confirmation is currently disabled in Supabase.");
+        } else {
+          setStatus("Signup request accepted. Check inbox/spam for a confirmation email.");
+        }
       }
     } catch (error) {
       setStatus(toAuthErrorMessage(error, mode));
@@ -85,6 +96,22 @@ export function LoginPage() {
     }
   };
 
+  const onResendSignupEmail = async () => {
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      await authRepository.resendSignupConfirmation(email.trim(), {
+        emailRedirectTo: authSignupCallbackUrl,
+      });
+      setStatus("Confirmation email resent. Check inbox/spam.");
+    } catch (error) {
+      setStatus(toAuthErrorMessage(error, "signup"));
+    }
+
+    setIsSubmitting(false);
+  };
+
   return (
     <div style={{ display: "grid", gap: "12px" }}>
       <h1 style={{ margin: 0 }}>{mode === "login" ? "Sign in" : "Create account"}</h1>
@@ -95,6 +122,7 @@ export function LoginPage() {
           onClick={() => {
             setMode("login");
             setStatus(null);
+            setCanResendSignupEmail(false);
           }}
           disabled={mode === "login"}
         >
@@ -105,6 +133,7 @@ export function LoginPage() {
           onClick={() => {
             setMode("signup");
             setStatus(null);
+            setCanResendSignupEmail(false);
           }}
           disabled={mode === "signup"}
         >
@@ -132,6 +161,12 @@ export function LoginPage() {
           {mode === "login" ? "Sign in with email" : "Create account"}
         </button>
       </form>
+
+      {mode === "signup" && canResendSignupEmail ? (
+        <button type="button" onClick={() => void onResendSignupEmail()} disabled={isSubmitting || !email.trim()}>
+          Resend confirmation email
+        </button>
+      ) : null}
 
       <button type="button" onClick={() => void onGithubLogin()} disabled={isSubmitting}>
         Continue with GitHub
