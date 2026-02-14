@@ -11,14 +11,16 @@ interface UseSearchPostsParams {
 
 export function useSearchPosts({ queryText, tags, limit = 20, cursor = null }: UseSearchPostsParams) {
   const { user } = useAuth();
+  const normalizedQueryText = queryText.trim();
+  const normalizedTags = tags ?? [];
 
   return useQuery({
-    queryKey: ["posts", "search", queryText, limit, cursor, user?.id ?? null],
+    queryKey: ["posts", "search", normalizedQueryText, normalizedTags, limit, cursor, user?.id ?? null],
     queryFn: () =>
       postsRepository.search(
-        queryText,
+        normalizedQueryText,
         {
-          tags,
+          tags: normalizedTags,
           limit,
           cursor,
         },
@@ -26,6 +28,6 @@ export function useSearchPosts({ queryText, tags, limit = 20, cursor = null }: U
           viewerId: user?.id ?? null,
         }
       ),
-    enabled: queryText.trim().length > 0,
+    enabled: normalizedQueryText.length > 0 || normalizedTags.length > 0,
   });
 }
