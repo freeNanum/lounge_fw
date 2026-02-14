@@ -1,7 +1,7 @@
 import type { Tag, TagSummary } from "../../entities/tag/types";
 import type { TagsRepository } from "../interfaces/tags.repository";
 import { supabase } from "../../shared/lib/supabase/supabaseClient";
-import { PostTagRow, TagRow, throwIfError, toTag } from "./_shared";
+import { TagRow, throwIfError, toTag } from "./_shared";
 
 class SupabaseTagsRepository implements TagsRepository {
   async listAll(): Promise<Tag[]> {
@@ -17,29 +17,17 @@ class SupabaseTagsRepository implements TagsRepository {
 
   async listPopular(limit: number): Promise<TagSummary[]> {
     const safeLimit = Math.max(limit, 1);
-    const { data: tagRows, error: tagError } = await supabase
-      .from("tags")
-      .select("id,name")
-      .order("name", { ascending: true });
+    const { data, error } = await supabase.rpc("list_popular_tags", {
+      p_limit: safeLimit,
+    });
 
-    throwIfError(tagError);
+    throwIfError(error);
 
-    const { data: links, error: linkError } = await supabase.from("post_tags").select("post_id,tag_id");
-    throwIfError(linkError);
-
-    const counts = new Map<string, number>();
-    for (const link of (links ?? []) as PostTagRow[]) {
-      counts.set(link.tag_id, (counts.get(link.tag_id) ?? 0) + 1);
-    }
-
-    return ((tagRows ?? []) as Array<{ id: string; name: string }>)
-      .map((row) => ({
-        id: row.id,
-        name: row.name,
-        postCount: counts.get(row.id) ?? 0,
-      }))
-      .sort((a, b) => b.postCount - a.postCount)
-      .slice(0, safeLimit);
+    return ((data ?? []) as Array<{ id: string; name: string; post_count: number }>).map((row) => ({
+      id: row.id,
+      name: row.name,
+      postCount: row.post_count,
+    }));
   }
 
   async searchByPrefix(keyword: string, limit: number): Promise<Tag[]> {

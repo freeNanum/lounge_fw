@@ -36,6 +36,19 @@ class SupabasePostsRepository implements PostsRepository {
   async listFeed(query: ListPostsQuery, context?: { viewerId?: string | null }): Promise<CursorPage<PostSummary>> {
     const limit = normalizeLimit(query.limit || DEFAULT_LIMIT);
 
+    if (query.q && query.q.trim().length > 0) {
+      const rpcRows = await this.searchRowsByRpc({
+        query: query.q,
+        limit: limit + 1,
+        cursor: query.cursor ?? null,
+        type: query.type ?? null,
+        tag: query.tag ?? null,
+      });
+      const sliced = rpcRows.slice(0, limit);
+
+      return this.toPostSummaryPage(sliced, rpcRows.length > limit, context?.viewerId ?? null);
+    }
+
     let builder = supabase
       .from("posts")
       .select("id,author_id,type,title,body,comment_count,like_count,created_at,updated_at")
@@ -114,13 +127,17 @@ class SupabasePostsRepository implements PostsRepository {
     query: { limit: number; cursor?: string | null },
     context?: { viewerId?: string | null }
   ): Promise<CursorPage<PostSummary>> {
-    return this.listFeed(
-      {
-        ...query,
-        q: queryText,
-      },
-      context
-    );
+    const limit = normalizeLimit(query.limit || DEFAULT_LIMIT);
+    const rpcRows = await this.searchRowsByRpc({
+      query: queryText,
+      limit: limit + 1,
+      cursor: query.cursor ?? null,
+      type: null,
+      tag: null,
+    });
+    const sliced = rpcRows.slice(0, limit);
+
+    return this.toPostSummaryPage(sliced, rpcRows.length > limit, context?.viewerId ?? null);
   }
 
   async getById(postId: string, context?: { viewerId?: string | null }): Promise<PostDetail | null> {
@@ -223,6 +240,26 @@ class SupabasePostsRepository implements PostsRepository {
   async remove(postId: string, authorId: string): Promise<void> {
     const { error } = await supabase.from("posts").delete().eq("id", postId).eq("author_id", authorId);
     throwIfError(error);
+  }
+
+  private async searchRowsByRpc(params: {
+    query: string;
+    limit: number;
+    cursor: string | null;
+    type: "question" | "info" | null;
+    tag: string | null;
+  }): Promise<PostRow[]> {
+    const { data, error } = await supabase.rpc("search_posts", {
+      p_query: params.query,
+      p_limit: params.limit,
+      p_cursor: params.cursor,
+      p_type: params.type,
+      p_tag: params.tag,
+    });
+
+    throwIfError(error);
+
+    return (data ?? []) as PostRow[];
   }
 
   private async toPostSummaryPage(

@@ -21,6 +21,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.4.1",
+    "supabase": "^2.76.8",
     "typescript": "^5.7.3",
     "vite": "^6.0.7"
   }
