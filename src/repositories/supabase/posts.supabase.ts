@@ -269,9 +269,39 @@ class SupabasePostsRepository implements PostsRepository {
       p_tags: params.tags,
     });
 
-    throwIfError(error);
+    if (!error) {
+      return (data ?? []) as PostRow[];
+    }
 
-    return (data ?? []) as PostRow[];
+    const normalizedErrorMessage = error.message.toLowerCase();
+    const isLegacyRpcSignatureError =
+      normalizedErrorMessage.includes("p_tags") ||
+      (normalizedErrorMessage.includes("search_posts") && normalizedErrorMessage.includes("does not exist"));
+
+    if (!isLegacyRpcSignatureError) {
+      throwIfError(error);
+      return [];
+    }
+
+    const primaryTag = params.tags.length > 0 ? params.tags[0] : null;
+    const { data: legacyData, error: legacyError } = await supabase.rpc("search_posts", {
+      p_query: params.query,
+      p_limit: params.limit,
+      p_cursor: params.cursor,
+      p_type: params.type,
+      p_tag: primaryTag,
+    });
+
+    throwIfError(legacyError);
+
+    let rows = (legacyData ?? []) as PostRow[];
+
+    if (params.tags.length > 1 && rows.length > 0) {
+      const requiredPostIds = new Set(await this.loadPostIdsByAllTagNames(params.tags));
+      rows = rows.filter((row) => requiredPostIds.has(row.id));
+    }
+
+    return rows;
   }
 
   private async toPostSummaryPage(

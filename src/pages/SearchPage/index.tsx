@@ -82,9 +82,9 @@ export function SearchPage() {
             type="button"
             onClick={() => toggleTag(tag.name)}
             style={{
-              borderColor: selectedTags.includes(tag.name) ? "#14b8a6" : undefined,
-              background: selectedTags.includes(tag.name) ? "#f0fdfa" : undefined,
-              color: selectedTags.includes(tag.name) ? "#0f766e" : undefined,
+              borderColor: selectedTags.includes(normalizeTagName(tag.name)) ? "#14b8a6" : undefined,
+              background: selectedTags.includes(normalizeTagName(tag.name)) ? "#f0fdfa" : undefined,
+              color: selectedTags.includes(normalizeTagName(tag.name)) ? "#0f766e" : undefined,
             }}
           >
             #{tag.name} ({tag.postCount})
