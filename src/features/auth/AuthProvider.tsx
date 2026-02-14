@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import type { ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useAuthStateListener } from "./useAuthStateListener";
-import { supabase } from "../../shared/lib/supabase/supabaseClient";
+import { authRepository, profilesRepository } from "../../repositories/supabase";
 
 interface AuthContextValue {
   session: Session | null;
@@ -21,16 +21,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  useAuthStateListener((nextSession) => {
+  useAuthStateListener((event, nextSession) => {
     setSession(nextSession);
     setIsInitializing(false);
+
+    if (!nextSession?.user) {
+      return;
+    }
+
+    if (event !== "SIGNED_IN" && event !== "INITIAL_SESSION") {
+      return;
+    }
+
+    void profilesRepository.ensureProfileForUser(nextSession.user).catch(() => undefined);
   });
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw new Error(error.message);
-    }
+    await authRepository.signOut();
   }, []);
 
   const value = useMemo<AuthContextValue>(

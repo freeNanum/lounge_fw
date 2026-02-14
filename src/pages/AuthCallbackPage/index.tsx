@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../app/router/paths";
-import { supabase } from "../../shared/lib/supabase/supabaseClient";
+import { authRepository } from "../../repositories/supabase";
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -12,9 +12,10 @@ export function AuthCallbackPage() {
       const hasCode = new URL(window.location.href).searchParams.get("code");
 
       if (hasCode) {
-        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-        if (error) {
-          setErrorMessage(error.message);
+        try {
+          await authRepository.exchangeCodeForSession(window.location.href);
+        } catch (error) {
+          setErrorMessage(error instanceof Error ? error.message : "Failed to finish sign-in.");
           return;
         }
       }

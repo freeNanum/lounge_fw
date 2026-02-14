@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { supabase } from "../../shared/lib/supabase/supabaseClient";
 
-export type AuthStateListener = (session: Session | null) => void;
+export type AuthStateListener = (event: AuthChangeEvent, session: Session | null) => void;
 
 export function useAuthStateListener(onSessionChange: AuthStateListener): void {
   useEffect(() => {
@@ -13,13 +13,13 @@ export function useAuthStateListener(onSessionChange: AuthStateListener): void {
         return;
       }
 
-      onSessionChange(data.session ?? null);
+      onSessionChange("INITIAL_SESSION", data.session ?? null);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      onSessionChange(session);
+      onSessionChange(_event, session);
     });
 
     return () => {

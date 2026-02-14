@@ -1,3 +1,4 @@
+export { authRepository } from "./auth.supabase";
 export { commentsRepository } from "./comments.supabase";
 export { likesRepository } from "./likes.supabase";
 export { postsRepository } from "./posts.supabase";

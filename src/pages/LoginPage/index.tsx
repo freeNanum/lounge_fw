@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../app/router/paths";
 import { useAuth } from "../../features/auth/AuthProvider";
-import { supabase } from "../../shared/lib/supabase/supabaseClient";
+import { authRepository } from "../../repositories/supabase";
 
 interface RedirectState {
   from?: {
@@ -10,12 +10,16 @@ interface RedirectState {
   };
 }
 
+type AuthMode = "login" | "signup";
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -32,49 +36,71 @@ export function LoginPage() {
     navigate(redirectPath, { replace: true });
   }, [user, navigate, redirectPath]);
 
-  const onEmailSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setStatus(null);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}${ROUTE_PATHS.authCallback}`,
-      },
-    });
-
-    setIsSubmitting(false);
-
-    if (error) {
-      setStatus(error.message);
+    try {
+      if (mode === "login") {
+        await authRepository.signInWithPassword(email.trim(), password);
+      } else {
+        await authRepository.signUpWithPassword(email.trim(), password);
+        setStatus("Account created. If email confirmation is enabled, please verify your inbox.");
+      }
+    } catch (error) {
+      if (mode === "login") {
+        setStatus(error instanceof Error ? error.message : "Failed to sign in.");
+      } else {
+        setStatus(error instanceof Error ? error.message : "Failed to create account.");
+      }
+      setIsSubmitting(false);
       return;
     }
 
-    setStatus("Check your email for a sign-in link.");
+    setIsSubmitting(false);
   };
 
   const onGithubLogin = async () => {
     setIsSubmitting(true);
     setStatus(null);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}${ROUTE_PATHS.authCallback}`,
-      },
-    });
-
-    if (error) {
-      setStatus(error.message);
+    try {
+      await authRepository.signInWithGithub(`${window.location.origin}${ROUTE_PATHS.authCallback}`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to continue with GitHub.");
       setIsSubmitting(false);
     }
   };
 
   return (
     <div style={{ display: "grid", gap: "12px" }}>
-      <h1 style={{ margin: 0 }}>Sign in</h1>
-      <form onSubmit={onEmailSubmit} style={{ display: "grid", gap: "8px" }}>
+      <h1 style={{ margin: 0 }}>{mode === "login" ? "Sign in" : "Create account"}</h1>
+
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("login");
+            setStatus(null);
+          }}
+          disabled={mode === "login"}
+        >
+          Login
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("signup");
+            setStatus(null);
+          }}
+          disabled={mode === "signup"}
+        >
+          Sign up
+        </button>
+      </div>
+
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: "8px" }}>
         <input
           type="email"
           value={email}
@@ -82,10 +108,19 @@ export function LoginPage() {
           placeholder="you@company.com"
           required
         />
-        <button type="submit" disabled={isSubmitting || !email.trim()}>
-          Send magic link
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Password"
+          minLength={6}
+          required
+        />
+        <button type="submit" disabled={isSubmitting || !email.trim() || password.length < 6}>
+          {mode === "login" ? "Sign in with email" : "Create account"}
         </button>
       </form>
+
       <button type="button" onClick={() => void onGithubLogin()} disabled={isSubmitting}>
         Continue with GitHub
       </button>
