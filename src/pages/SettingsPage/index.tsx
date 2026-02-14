@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, type CSSProperties } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { profilesRepository } from "../../repositories/supabase";
 import { useAuth } from "../../features/auth/AuthProvider";
@@ -25,6 +25,20 @@ export function SettingsPage() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
+  const fieldContainerStyle: CSSProperties = {
+    display: "grid",
+    gap: "6px",
+  };
+
+  const fieldBaseStyle: CSSProperties = {
+    width: "100%",
+    boxSizing: "border-box",
+    border: "1px solid #cbd5e1",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    fontSize: "14px",
+  };
+
   useEffect(() => {
     if (!profileQuery.data) {
       return;
@@ -46,22 +60,35 @@ export function SettingsPage() {
   };
 
   return (
-    <div style={{ display: "grid", gap: "12px", maxWidth: "600px" }}>
+    <div style={{ display: "grid", gap: "14px", maxWidth: "720px" }}>
       <h1 style={{ margin: 0 }}>Settings</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "10px" }}>
-        <label>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px", background: "#fff", border: "1px solid #e2e8f0", padding: "14px" }}>
+        <label style={fieldContainerStyle}>
           Nickname
-          <input value={nickname} onChange={(event) => setNickname(event.target.value)} minLength={2} maxLength={30} required />
+          <input
+            value={nickname}
+            onChange={(event) => setNickname(event.target.value)}
+            minLength={2}
+            maxLength={30}
+            style={fieldBaseStyle}
+            required
+          />
         </label>
-        <label>
+        <label style={fieldContainerStyle}>
           Bio
-          <textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={300} rows={4} />
+          <textarea
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            maxLength={300}
+            rows={4}
+            style={{ ...fieldBaseStyle, minHeight: "120px", resize: "vertical" }}
+          />
         </label>
-        <label>
+        <label style={fieldContainerStyle}>
           Avatar URL
-          <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} />
+          <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} style={fieldBaseStyle} />
         </label>
-        <button type="submit" disabled={updateMutation.isPending || profileQuery.isLoading}>
+        <button type="submit" disabled={updateMutation.isPending || profileQuery.isLoading} style={{ width: "fit-content", padding: "10px 14px" }}>
           {updateMutation.isPending ? "Saving..." : "Save Profile"}
         </button>
       </form>

@@ -79,7 +79,7 @@ export function PostEditPage() {
   return (
     <div style={{ display: "grid", gap: "16px" }}>
       <h1 style={{ margin: 0 }}>Edit Post</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "10px", maxWidth: "760px" }}>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: "10px", maxWidth: "960px" }}>
         <label>
           Type
           <select value={type} onChange={(event) => setType(event.target.value as PostType)}>
@@ -93,7 +93,14 @@ export function PostEditPage() {
         </label>
         <label>
           Body
-          <textarea value={body} onChange={(event) => setBody(event.target.value)} rows={10} minLength={10} required />
+          <textarea
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            rows={18}
+            minLength={10}
+            style={{ width: "100%", minHeight: "420px", resize: "vertical" }}
+            required
+          />
         </label>
         <PostTagSelector selectedTagNames={tagNames} onChange={setTagNames} disabled={updatePost.isPending || deletePost.isPending} />
         <div style={{ display: "flex", gap: "8px" }}>

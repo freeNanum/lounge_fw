@@ -70,7 +70,7 @@ export function WritePage() {
   return (
     <div style={{ display: "grid", gap: "16px" }}>
       <h1 style={{ margin: 0 }}>Create Post</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px", maxWidth: "760px" }}>
+      <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px", maxWidth: "960px" }}>
         <label>
           Type
           <select {...register("type", { required: true })}>
@@ -112,8 +112,9 @@ export function WritePage() {
                 message: "Content must be 20000 characters or less.",
               },
             })}
-            rows={12}
+            rows={18}
             minLength={10}
+            style={{ width: "100%", minHeight: "420px", resize: "vertical" }}
             placeholder={"# Problem\nDescribe your issue with details...\n\n## What I tried\n- step 1\n- step 2"}
           />
         </label>

@@ -12,7 +12,7 @@ export function MyPage() {
       <h1 style={{ margin: 0 }}>My Page</h1>
       <div>User ID: {user.id}</div>
       <div>Email: {user.email}</div>
-      <button type="button" onClick={() => void signOut()}>
+      <button type="button" onClick={() => void signOut()} style={{ width: "fit-content", padding: "10px 14px" }}>
         Sign out
       </button>
     </div>
