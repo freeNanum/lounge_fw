@@ -23,8 +23,12 @@ class SupabaseAuthRepository implements AuthRepository {
 
     throwIfError(error);
 
+    const identities = data.user?.identities;
+    const alreadyRegistered = Array.isArray(identities) && identities.length === 0;
+
     return {
       sessionCreated: Boolean(data.session),
+      alreadyRegistered,
     };
   }
 

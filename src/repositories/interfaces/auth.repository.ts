@@ -1,5 +1,6 @@
 export interface SignUpResult {
   sessionCreated: boolean;
+  alreadyRegistered: boolean;
 }
 
 export interface AuthRepository {

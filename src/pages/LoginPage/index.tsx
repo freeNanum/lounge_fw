@@ -68,10 +68,14 @@ export function LoginPage() {
         const result = await authRepository.signUpWithPassword(email.trim(), password, {
           emailRedirectTo: authSignupCallbackUrl,
         });
-        setCanResendSignupEmail(true);
-        if (result.sessionCreated) {
+        if (result.alreadyRegistered) {
+          setCanResendSignupEmail(false);
+          setStatus("This email is already registered. Please sign in instead.");
+        } else if (result.sessionCreated) {
+          setCanResendSignupEmail(false);
           setStatus("Account created and signed in. Email confirmation is currently disabled in Supabase.");
         } else {
+          setCanResendSignupEmail(true);
           setStatus("Signup request accepted. Check inbox/spam for a confirmation email.");
         }
       }
