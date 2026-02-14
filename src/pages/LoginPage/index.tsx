@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../app/router/paths";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { authRepository } from "../../repositories/supabase";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 interface RedirectState {
   from?: {
@@ -28,6 +29,13 @@ function toAuthErrorMessage(error: unknown, mode: AuthMode): string {
 }
 
 export function LoginPage() {
+  useSeoMeta({
+    title: "Sign In",
+    description: "Sign in or create an account for Lounge FW.",
+    path: "/auth/login",
+    robots: "noindex,nofollow",
+  });
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();

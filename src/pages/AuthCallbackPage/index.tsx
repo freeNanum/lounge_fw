@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../app/router/paths";
 import { authRepository } from "../../repositories/supabase";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 function isPkceVerifierMissingError(message: string): boolean {
   const normalized = message.toLowerCase();
@@ -9,6 +10,13 @@ function isPkceVerifierMissingError(message: string): boolean {
 }
 
 export function AuthCallbackPage() {
+  useSeoMeta({
+    title: "Auth Callback",
+    description: "Authentication callback processing.",
+    path: "/auth/callback",
+    robots: "noindex,nofollow",
+  });
+
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

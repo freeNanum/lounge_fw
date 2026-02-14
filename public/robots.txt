@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lounge-fw.vercel.app/sitemap.xml

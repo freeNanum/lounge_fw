@@ -2,8 +2,16 @@ import { FormEvent, useEffect, useState, type CSSProperties } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { profilesRepository } from "../../repositories/supabase";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 export function SettingsPage() {
+  useSeoMeta({
+    title: "Settings",
+    description: "Update your Lounge FW profile settings.",
+    path: "/settings",
+    robots: "noindex,nofollow",
+  });
+
   const { user } = useAuth();
 
   const profileQuery = useQuery({

@@ -4,6 +4,7 @@ import type { PostType } from "../../entities/post/types";
 import { useAuth } from "../../features/auth/AuthProvider";
 import { PostTagSelector } from "../../features/post-editor/components/PostTagSelector";
 import { useCreatePost } from "../../features/post-editor/usePostMutations";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 import { FormErrorText } from "../../shared/ui/FormErrorText";
 
 interface CreatePostFormValues {
@@ -49,6 +50,13 @@ Why this tip/update matters.
 - Link or document`;
 
 export function WritePage() {
+  useSeoMeta({
+    title: "Create Post",
+    description: "Create a new post in Lounge FW.",
+    path: "/write",
+    robots: "noindex,nofollow",
+  });
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const createPost = useCreatePost();

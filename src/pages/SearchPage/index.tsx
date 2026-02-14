@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSearchPosts } from "../../features/search/useSearchPosts";
 import { usePopularTags } from "../../features/tag-filter/useTags";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 function normalizeTagName(raw: string): string {
   return raw.trim().toLowerCase();
@@ -11,6 +12,12 @@ export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("q") ?? "";
   const selectedTags = [...new Set(searchParams.getAll("tag").map(normalizeTagName).filter(Boolean))];
+  useSeoMeta({
+    title: "Search",
+    description: "Search posts by keyword and tags in Lounge FW.",
+    path: "/search",
+  });
+
   const [queryText, setQueryText] = useState(initial);
   const tagsQuery = usePopularTags(12);
 

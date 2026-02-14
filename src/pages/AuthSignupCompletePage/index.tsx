@@ -1,7 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { ROUTE_PATHS } from "../../app/router/paths";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 export function AuthSignupCompletePage() {
+  useSeoMeta({
+    title: "Signup Complete",
+    description: "Your Lounge FW account signup is complete.",
+    path: "/auth/signup-complete",
+    robots: "noindex,nofollow",
+  });
+
   const navigate = useNavigate();
 
   return (

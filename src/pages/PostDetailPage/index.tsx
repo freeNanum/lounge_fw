@@ -6,6 +6,7 @@ import { useTogglePostLike } from "../../features/likes/usePostLike";
 import { usePostDetail } from "../../features/post-detail/usePostDetail";
 import { usePostRealtime } from "../../features/post-detail/usePostRealtime";
 import { PostDetailCard } from "../../features/post-detail/components/PostDetailCard";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 export function PostDetailPage() {
   const { postId } = useParams<{ postId: string }>();
@@ -18,6 +19,13 @@ export function PostDetailPage() {
   const toggleLike = useTogglePostLike(postId ?? "");
 
   const post = postQuery.data;
+
+  useSeoMeta({
+    title: post ? post.title : "Post",
+    description: post ? post.body.slice(0, 150) : "Read a community post on Lounge FW.",
+    path: postId ? `/posts/${postId}` : "/",
+    type: "article",
+  });
 
   if (!postId) {
     return <div>Invalid post id.</div>;

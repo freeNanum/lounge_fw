@@ -1,6 +1,14 @@
 import { useAuth } from "../../features/auth/AuthProvider";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 export function MyPage() {
+  useSeoMeta({
+    title: "My Page",
+    description: "Manage your account information in Lounge FW.",
+    path: "/me",
+    robots: "noindex,nofollow",
+  });
+
   const { user, signOut } = useAuth();
 
   if (!user) {

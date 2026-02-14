@@ -4,12 +4,19 @@ import { useFeedPosts } from "../../features/feed/useFeedPosts";
 import { usePopularTags } from "../../features/tag-filter/useTags";
 import { FeedFilterPanel } from "../../features/feed/components/FeedFilterPanel";
 import { PostFeedList } from "../../features/feed/components/PostFeedList";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 function normalizeTagName(raw: string): string {
   return raw.trim().toLowerCase();
 }
 
 export function HomePage() {
+  useSeoMeta({
+    title: "Community Feed",
+    description: "Browse firmware and embedded community posts, questions, and practical tips.",
+    path: "/",
+  });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedType = (searchParams.get("type") as PostType | null) ?? undefined;
   const selectedSort = (searchParams.get("sort") as PostSort | null) ?? "latest";

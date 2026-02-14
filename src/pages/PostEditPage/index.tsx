@@ -5,6 +5,7 @@ import { useAuth } from "../../features/auth/AuthProvider";
 import { usePostDetail } from "../../features/post-detail/usePostDetail";
 import { PostTagSelector } from "../../features/post-editor/components/PostTagSelector";
 import { useDeletePost, useUpdatePost } from "../../features/post-editor/usePostMutations";
+import { useSeoMeta } from "../../shared/seo/useSeoMeta";
 
 const QUESTION_PLACEHOLDER = `# Problem
 What issue are you facing?
@@ -42,6 +43,13 @@ Why this tip/update matters.
 - Link or document`;
 
 export function PostEditPage() {
+  useSeoMeta({
+    title: "Edit Post",
+    description: "Edit your post in Lounge FW.",
+    path: "/posts/edit",
+    robots: "noindex,nofollow",
+  });
+
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
