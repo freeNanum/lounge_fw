@@ -48,6 +48,14 @@ export function CommentSection({ postId, limit = 50 }: CommentSectionProps) {
     return sortByCreatedAtAsc(items);
   }, [commentsQuery.data]);
 
+  const invalidatePostData = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["comments", "post", postId] }),
+      queryClient.invalidateQueries({ queryKey: ["posts", "detail", postId] }),
+      queryClient.invalidateQueries({ queryKey: ["posts", "feed"] }),
+    ]);
+  };
+
   const createComment = useMutation({
     mutationFn: async () => {
       if (!user?.id) {
@@ -66,7 +74,7 @@ export function CommentSection({ postId, limit = 50 }: CommentSectionProps) {
     },
     onSuccess: async () => {
       setCommentDraft("");
-      await queryClient.invalidateQueries({ queryKey: ["comments", "post", postId] });
+      await invalidatePostData();
     },
     onError: (error) => {
       if (error instanceof Error) {
@@ -115,7 +123,7 @@ export function CommentSection({ postId, limit = 50 }: CommentSectionProps) {
       await commentsRepository.remove(commentId, user.id);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["comments", "post", postId] });
+      await invalidatePostData();
     },
     onError: (error) => {
       if (error instanceof Error) {

@@ -1,27 +1,30 @@
 import type { PostLikeStatus, ToggleLikeResult } from "../../entities/like/types";
 import type { LikesRepository } from "../interfaces/likes.repository";
 import { supabase } from "../../shared/lib/supabase/supabaseClient";
-import { PostRow, throwIfError } from "./_shared";
+import { throwIfError } from "./_shared";
 
 class SupabaseLikesRepository implements LikesRepository {
   async getPostLikeStatus(postId: string, viewerId: string): Promise<PostLikeStatus> {
-    const [{ data: postRow, error: postError }, { data: likeRow, error: likeError }] = await Promise.all([
-      supabase.from("posts").select("id,like_count").eq("id", postId).single(),
-      supabase
-        .from("post_likes")
-        .select("post_id")
-        .eq("post_id", postId)
-        .eq("user_id", viewerId)
-        .maybeSingle(),
-    ]);
+    const [{ error: postError }, { data: likeRow, error: likeError }, { count: likeCount, error: likeCountError }] =
+      await Promise.all([
+        supabase.from("posts").select("id").eq("id", postId).single(),
+        supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("post_id", postId)
+          .eq("user_id", viewerId)
+          .maybeSingle(),
+        supabase.from("post_likes").select("post_id", { count: "exact", head: true }).eq("post_id", postId),
+      ]);
 
     throwIfError(postError);
     throwIfError(likeError);
+    throwIfError(likeCountError);
 
     return {
       postId,
       likedByViewer: Boolean(likeRow),
-      likeCount: (postRow as Pick<PostRow, "like_count">).like_count,
+      likeCount: likeCount ?? 0,
     };
   }
 
