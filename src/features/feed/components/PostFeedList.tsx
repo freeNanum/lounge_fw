@@ -20,7 +20,22 @@ export function PostFeedList({ posts, onSelectTag }: PostFeedListProps) {
           </h3>
           <p style={{ marginTop: 0 }}>{post.excerpt}</p>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", color: "#475569", fontSize: "14px" }}>
-            <span>likes {post.likeCount}</span>
+            <span style={{ color: post.isLikedByViewer ? "#0f766e" : "#475569", fontWeight: post.isLikedByViewer ? 700 : 400 }}>
+              likes {post.likeCount}
+            </span>
+            {post.isLikedByViewer ? (
+              <span
+                style={{
+                  border: "1px solid #14b8a6",
+                  background: "#f0fdfa",
+                  color: "#0f766e",
+                  padding: "0 6px",
+                  borderRadius: "9999px",
+                }}
+              >
+                Liked
+              </span>
+            ) : null}
             <span>comments {post.commentCount}</span>
             {post.tags.map((tag) => (
               <button key={tag.id} type="button" onClick={() => onSelectTag(tag.name)}>

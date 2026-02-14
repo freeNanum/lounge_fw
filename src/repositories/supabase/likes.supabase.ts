@@ -26,7 +26,13 @@ class SupabaseLikesRepository implements LikesRepository {
   }
 
   async like(postId: string, viewerId: string): Promise<ToggleLikeResult> {
-    const { error } = await supabase.from("post_likes").upsert({ post_id: postId, user_id: viewerId });
+    const { error } = await supabase.from("post_likes").upsert(
+      { post_id: postId, user_id: viewerId },
+      {
+        onConflict: "post_id,user_id",
+        ignoreDuplicates: true,
+      }
+    );
     throwIfError(error);
 
     return this.resolveToggleResult(postId, viewerId);
