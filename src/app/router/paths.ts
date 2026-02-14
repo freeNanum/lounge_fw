@@ -11,6 +11,7 @@ export const ROUTE_PATHS = {
   settings: "/settings",
   authLogin: "/auth/login",
   authCallback: "/auth/callback",
+  authSignupComplete: "/auth/signup-complete",
 } as const;
 
 export type RoutePathKey = keyof typeof ROUTE_PATHS;

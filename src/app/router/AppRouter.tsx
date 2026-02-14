@@ -13,6 +13,7 @@ import { SettingsPage } from "../../pages/SettingsPage/index";
 import { PostEditPage } from "../../pages/PostEditPage/index";
 import { LoginPage } from "../../pages/LoginPage/index";
 import { AuthCallbackPage } from "../../pages/AuthCallbackPage/index";
+import { AuthSignupCompletePage } from "../../pages/AuthSignupCompletePage/index";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
     children: [
       { path: ROUTE_PATHS.authLogin, element: <LoginPage /> },
       { path: ROUTE_PATHS.authCallback, element: <AuthCallbackPage /> },
+      { path: ROUTE_PATHS.authSignupComplete, element: <AuthSignupCompletePage /> },
     ],
   },
 ]);

@@ -9,7 +9,9 @@ export function AuthCallbackPage() {
 
   useEffect(() => {
     const run = async () => {
-      const hasCode = new URL(window.location.href).searchParams.get("code");
+      const url = new URL(window.location.href);
+      const hasCode = url.searchParams.get("code");
+      const flow = url.searchParams.get("flow");
 
       if (hasCode) {
         try {
@@ -18,6 +20,11 @@ export function AuthCallbackPage() {
           setErrorMessage(error instanceof Error ? error.message : "Failed to finish sign-in.");
           return;
         }
+      }
+
+      if (flow === "signup") {
+        navigate(ROUTE_PATHS.authSignupComplete, { replace: true });
+        return;
       }
 
       navigate(ROUTE_PATHS.home, { replace: true });

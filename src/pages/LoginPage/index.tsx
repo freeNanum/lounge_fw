@@ -40,6 +40,7 @@ export function LoginPage() {
   }, [location.state]);
 
   const authCallbackUrl = `${window.location.origin}${ROUTE_PATHS.authCallback}`;
+  const authSignupCallbackUrl = `${window.location.origin}${ROUTE_PATHS.authCallback}?flow=signup`;
 
   useEffect(() => {
     if (!user) {
@@ -59,7 +60,7 @@ export function LoginPage() {
         await authRepository.signInWithPassword(email.trim(), password);
       } else {
         await authRepository.signUpWithPassword(email.trim(), password, {
-          emailRedirectTo: authCallbackUrl,
+          emailRedirectTo: authSignupCallbackUrl,
         });
         setStatus("Account created. If email confirmation is enabled, please verify your inbox.");
       }
